@@ -12,8 +12,8 @@ function addFrontmatterToFiles(dir) {
 
             // Check if frontmatter already exists
             if (fileContents.startsWith('---')) {
-                // Append to existing frontmatter
-                const updatedFrontmatter = `File Creation Date: ${creationDate}\nLast Modified: ${lastModifiedDate}\n`;
+                // Update existing frontmatter
+                const updatedFrontmatter = `File Creation Date: ${creationDate || 'N/A'}\nLast Modified: ${lastModifiedDate || 'N/A'}\n`;
                 const newContents = fileContents.replace(/(---\n.*?\n---\n)/s, `$1${updatedFrontmatter}`);
                 fs.writeFileSync(filePath, newContents, 'utf-8');
                 console.log(`Updated frontmatter in: ${filePath}`);
@@ -22,8 +22,8 @@ function addFrontmatterToFiles(dir) {
                 const frontmatter = `---\n` +
                     `title: ${file.replace(/\.[^/.]+$/, "")}\n` + // Remove file extension for title
                     `tags: \n` +
-                    `File Creation Date: ${creationDate}\n` +
-                    `Last Modified: ${lastModifiedDate}\n` +
+                    `File Creation Date: ${creationDate || 'N/A'}\n` +
+                    `Last Modified: ${lastModifiedDate || 'N/A'}\n` +
                     `---\n\n`;
 
                 // Prepend frontmatter to the file contents

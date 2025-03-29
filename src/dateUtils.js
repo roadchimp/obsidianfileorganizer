@@ -3,11 +3,30 @@ const fs = require('fs');
 // Function to extract the creation and modification dates from file contents
 function extractDatesFromFileContents(filePath) {
     const fileContents = fs.readFileSync(filePath, 'utf-8');
-    const createdAtMatch = fileContents.match(/Created at:\s*(\d{4}-\d{2}-\d{2})/);
-    const updatedAtMatch = fileContents.match(/Updated at:\s*(\d{4}-\d{2}-\d{2})/);
 
-    const creationDate = createdAtMatch ? createdAtMatch[1] : null; // Return the date found in "Created at"
-    const lastModifiedDate = updatedAtMatch ? updatedAtMatch[1] : null; // Return the date found in "Updated at"
+    // Define an array of patterns to search for
+    const datePatterns = [
+        { label: 'Created at:', regex: /Created at:\s*(\d{4}-\d{2}-\d{2})/ },
+        { label: 'Updated at:', regex: /Updated at:\s*(\d{4}-\d{2}-\d{2})/ },
+        { label: 'File Creation Date:', regex: /File Creation Date:\s*(\d{4}-\d{2}-\d{2})/ },
+        { label: 'Last Modified:', regex: /Last Modified:\s*(\d{4}-\d{2}-\d{2})/ },
+        // Add more patterns as needed
+    ];
+
+    let creationDate = null;
+    let lastModifiedDate = null;
+
+    // Iterate through the patterns to find matches
+    for (const pattern of datePatterns) {
+        const match = fileContents.match(pattern.regex);
+        if (match) {
+            if (pattern.label.includes('Created') || pattern.label.includes('Creation')) {
+                creationDate = match[1]; // Capture the creation date
+            } else if (pattern.label.includes('Updated') || pattern.label.includes('Modified')) {
+                lastModifiedDate = match[1]; // Capture the last modified date
+            }
+        }
+    }
 
     return { creationDate, lastModifiedDate };
 }

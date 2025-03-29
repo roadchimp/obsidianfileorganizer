@@ -50,4 +50,31 @@ function processDirectory(dir) {
     });
 }
 
-module.exports = { processDirectory };
+// Function to process files and utilize date extraction
+function processFiles(dir) {
+    fs.readdirSync(dir).forEach(file => {
+        const filePath = path.join(dir, file);
+        if (fs.lstatSync(filePath).isFile() && path.extname(file) === '.md') {
+            const { creationDate, lastModifiedDate } = extractDatesFromFileContents(filePath);
+            // Use the dates as needed in your processing logic
+            console.log(`Processing ${file}: Created on ${creationDate}, Last modified on ${lastModifiedDate}`);
+
+            // Example: Update front matter if necessary
+            updateFrontmatterIfNeeded(filePath, creationDate, lastModifiedDate);
+        }
+    });
+}
+
+// Function to update front matter if needed
+function updateFrontmatterIfNeeded(filePath, creationDate, lastModifiedDate) {
+    const fileContents = fs.readFileSync(filePath, 'utf-8');
+    if (fileContents.startsWith('---')) {
+        // Logic to update existing front matter
+        const updatedFrontmatter = `File Creation Date: ${creationDate || 'N/A'}\nLast Modified: ${lastModifiedDate || 'N/A'}\n`;
+        const newContents = fileContents.replace(/(---\n.*?\n---\n)/s, `$1${updatedFrontmatter}`);
+        fs.writeFileSync(filePath, newContents, 'utf-8');
+        console.log(`Updated frontmatter in: ${filePath}`);
+    }
+}
+
+module.exports = { processDirectory, processFiles };
