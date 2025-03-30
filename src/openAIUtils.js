@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-const OPENAI_API_KEY = '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'; // Replace with your OpenAI API key
+const OPENAI_API_KEY = ; // Replace with your OpenAI API key
 
 async function summarizeFileContentWithOpenAI(fileContents) {
     const response = await axios.post(
