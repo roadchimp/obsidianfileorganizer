@@ -10,3 +10,7 @@ yarn.lock
 
 # Ignore all files in the "folder tags" directory
 folder tags/
+
+# Ignore any other dependencies
+*.log
+*.tmp
