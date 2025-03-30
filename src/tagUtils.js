@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { summarizeFileContentWithOpenAI } = require('./openAIUtils');
+const { loadGlossary } = require('./tagGeneratorUtils');
 
 // Function to summarize file content and generate a title
 function summarizeFileContent(filePath) {
@@ -24,20 +25,57 @@ async function generateSingleWordTag(filePath) {
 // Function to read standardized tags from the tags file
 function readStandardTags(tagsFilePath) {
     if (!fs.existsSync(tagsFilePath)) return [];
-    const content = fs.readFileSync(tagsFilePath, 'utf-8');
-    return content.split('\n').map(tag => tag.trim()).filter(tag => tag);
+    
+    try {
+        // Try to read as JSON first (new format)
+        const content = fs.readFileSync(tagsFilePath, 'utf-8');
+        const tags = JSON.parse(content);
+        return Array.isArray(tags) ? tags : [];
+    } catch (error) {
+        // Fall back to old format (newline-separated)
+        const content = fs.readFileSync(tagsFilePath, 'utf-8');
+        return content.split('\n').map(tag => tag.trim()).filter(tag => tag);
+    }
 }
 
 // Function to summarize file content and generate multiple tags
 async function generateTags(filePath, tagsFilePath, rootFolderName) {
-    const fileContents = fs.readFileSync(filePath, 'utf-8');
-    const summary = await summarizeFileContentWithOpenAI(fileContents); // Use OpenAI for summarization
-    const words = summary.split(' ').slice(0, 5); // Get the first 5 words for potential tags
-
     // Read standardized tags
     const standardTags = readStandardTags(tagsFilePath);
+    
+    // If we have a way to get to the AI-generated tags, use that
+    if (tagsFilePath && path.extname(tagsFilePath) === '.json') {
+        const { processDirectoryWithAITags, generateTagsForContent } = require('./tagGeneratorUtils');
+        const { getOpenAIClient } = require('./openAIUtils');
+        
+        try {
+            // Load existing glossary
+            const glossary = loadGlossary(tagsFilePath);
+            
+            // Generate AI tags for the specific file
+            const fileContents = fs.readFileSync(filePath, 'utf-8');
+            const openai = getOpenAIClient();
+            const aiTags = await generateTagsForContent(fileContents, glossary, openai);
+            
+            // Include the root folder name as one of the tags if available
+            if (rootFolderName && !aiTags.includes(rootFolderName)) {
+                aiTags.push(rootFolderName);
+            }
+            
+            return aiTags.slice(0, 5); // Return only up to 5 tags
+        } catch (error) {
+            console.error('Error generating AI tags:', error.message);
+            // Fall back to the original method if AI tag generation fails
+        }
+    }
+    
+    // Original method as fallback
+    const fileContents = fs.readFileSync(filePath, 'utf-8');
+    const summary = await summarizeFileContentWithOpenAI(fileContents);
+    const words = summary.split(' ').slice(0, 5); // Get the first 5 words for potential tags
+    
     const tags = [];
-
+    
     // Generate tags based on summary and standard tags
     for (const word of words) {
         if (tags.length < 5) {
@@ -47,11 +85,11 @@ async function generateTags(filePath, tagsFilePath, rootFolderName) {
     }
 
     // Include the root folder name as one of the tags
-    if (!tags.includes(rootFolderName)) {
+    if (rootFolderName && !tags.includes(rootFolderName)) {
         tags.push(rootFolderName);
     }
 
     return tags.slice(0, 5); // Return only the first 5 tags
 }
 
-module.exports = { summarizeFileContent, generateSingleWordTag, generateTags };
+module.exports = { summarizeFileContent, generateSingleWordTag, generateTags, readStandardTags };

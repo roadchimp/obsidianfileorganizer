@@ -3,15 +3,22 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/index.js",
+    "tag-ai": "node src/index.js --ai",
+    "process": "node src/processFolder.js",
+    "sequential": "node src/sequentialProcessor.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
+  "description": "Obsidian file organizer with AI-assisted tagging",
   "dependencies": {
     "axios": "^1.8.4",
     "fs": "^0.0.1-security",
+    "glob": "^10.3.10",
+    "gray-matter": "^4.0.3",
+    "openai": "^4.28.0",
     "path": "^0.12.7"
   }
 }
